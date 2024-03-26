@@ -1,14 +1,16 @@
 from Bio import SeqIO
 from Bio.SeqFeature import SeqFeature, FeatureLocation
+from BCBio import GFF
 import subprocess
+import glob
 import os
+import re
 
 def run_prodigal(fasta_file, output_file):
-    return subprocess.call(f'prodigal -i {fasta_file} -p meta -o {output_file} -f gbk')
 
-def correct_contig(genbank_file):
-    # Parse the GenBank file
-    record = next(SeqIO.parse(genbank_file, 'genbank'))
+    return subprocess.call(f'prodigal -i {fasta_file} -p meta -o {output_file} -f gff', shell=True)
+
+def correct_contig(record, output_file):
 
     # Find the largest feature on the forward strand
     largest_feature = None
@@ -32,10 +34,32 @@ def correct_contig(genbank_file):
             new_features.append(new_feature)
         record.features = new_features
         record.seq = record.seq[offset:] + record.seq[:offset]
-
+        record.annotations['molecule_type'] = 'DNA'
+    SeqIO.write([record], output_file, 'genbank')
     return record
     
-
-
-def run_cmscan(fasta_file, output_file):
-    return subprocess.call(f'prodigal -i {fasta_file} -p meta -o {output_file} -f gbk')
+def run_cmscan(fasta_file, output_directory, cm_directory, threshold=1e-6):
+    sites = []
+    for cm_file in glob.glob(f'{cm_directory}/*.cm'):
+        cm_family = os.path.splitext(os.path.basename(cm_file))[0]
+        subprocess.call(f'cmpress -F {cm_file}', shell=True)
+        subprocess.call(f'cmscan --tblout {output_directory}/{cm_family}.txt {cm_file} {fasta_file}', shell=True)
+        for line in open(f'{output_directory}/{cm_family}.txt'):
+            if line.startswith('#'):
+                continue
+            site = {}
+            site['family'] = line[0:20].strip(' ')
+            site['evalue'] = float(line[138:147].strip(' '))
+            site['start']  = int(line[85:93].strip(' '))
+            site['end']    = int(line[94:102].strip(' '))
+            site['strand'] = int(line[107] + '1')
+            if site['evalue'] < threshold:
+                sites.append(site)
+        return sites
+    
+def add_rfam_sites_to_record(record, sites):
+    for s, site in enumerate(sites):
+        location = FeatureLocation(start=site['start'], end=site['end'], strand=site['strand'])
+        feature  = SeqFeature(type='misc_feature', location=location, qualifiers={'note': f'motif:{site["family"]}'})
+        record.features.append(feature)
+    return record

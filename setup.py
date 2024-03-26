@@ -15,6 +15,7 @@ setup(
         ]},
     install_requires = [
         'pandas',
-        'biopython'
+        'biopython',
+        'bcbio-gff'
     ]
 )

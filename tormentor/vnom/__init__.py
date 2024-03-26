@@ -3,9 +3,11 @@ import subprocess
 import os
 
 def run_vnom(fasta_preffix, max_length=2000):
+    if os.path.isdir("0_non_singleton_clusters"):
+        os.system('rm -r 0_non_singleton_clusters')
     command = (
         'python vnom/VNom.py '
-        f'-i {fasta_preffix} '
+        f'-i {os.getcwd()}/{fasta_preffix} '
         f'-max {max_length} '
         '-CF_k 10 '
         '-CF_simple 0 '
