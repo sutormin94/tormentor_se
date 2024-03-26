@@ -1,6 +1,8 @@
 # Tormentor
 
-An [obelisk](https://www.biorxiv.org/content/10.1101/2024.01.20.576352v1.full.pdf) prediction and annotation pipeline
+An [obelisk](https://www.biorxiv.org/content/10.1101/2024.01.20.576352v1.full.pdf) prediction and annotation pipeline. Obelisks were proposed and defined by [Zheludev et al (2024)](https://www.biorxiv.org/content/10.1101/2024.01.20.576352v1.full)  as:
+
+*class of viroid-like elements that we first identified in human gut metatranscriptomic data. “Obelisks” share several properties: (i) apparently circular RNA ∼1kb genome assemblies, (ii) predicted rod-like secondary structures encompassing the entire genome, and (iii) open reading frames coding for a novel protein superfamily, which we call the “Oblins”*.
 
 ![](assets/tormentor.png)
 
@@ -22,12 +24,12 @@ an environment named `tormentor` will be created.
 
 ![](assets/workflow.png)
 
-The pipeline was implements using the Python programming language version 3.8. Raw RNA-Seq reads as processed and trimmed using FASTP and assembled using rnaSPAdes, followed by an identification of viroid-like elements using VNOM. Circular elements with length between 900 and 2000 are keep and analyzed using Prodigal for ORF annotation and adjust of the sequence phase based on the start position of the largest ORF. Obelisks-related ribozyme motifs are annotated using cmscan from the INFERNAL package using the covariance models created by the original team, and secondary structures and predicted using RNAFold. Only sequences containing ORFs and an secondary structure composed by at least 90% of self-pairing regions are considered potential obelisks. 
+The pipeline was implements using the Python programming language version 3.8. Raw RNA-Seq reads as processed and trimmed using FASTP and assembled using rnaSPAdes, followed by an identification of viroid-like elements using VNOM. Circular elements with length between 900 and 2000 are keep and analyzed using Prodigal for ORF annotation and adjust of the sequence phase based on the start position of the largest ORF. Obelisks-related ribozyme motifs are annotated using cmscan from the INFERNAL package using the [covariance models created by the original team](https://www.biorxiv.org/content/10.1101/2024.01.20.576352v1.full), and secondary structures and predicted using RNAFold. Only sequences containing ORFs and an secondary structure composed by at least 90% of self-pairing regions are considered potential obelisks. 
 
 ## Running
 
 ```bash
-(tormentor) $ tormentor --reads reads_1.fastq reads_2.fastq --output results/ --threads 4
+(tormentor) $ tormentor --reads reads_1.fastq reads_2.fastq --output results/ --threads 4 --cm-directory data/cms/
 ```
 
 ## Results
