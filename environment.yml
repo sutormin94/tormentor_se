@@ -1,0 +1,16 @@
+name: tormentor
+channels:
+  - anaconda
+  - bioconda
+dependencies:
+  - python
+  - git
+  - cmake
+  - seqkit
+  - viennarna
+  - spades
+  - pyyaml=3.12
+  - prodigal
+  - pip
+  - pip:
+    - -e .
