@@ -2,11 +2,15 @@ from Bio import SeqIO
 import subprocess
 
 def run_spades(forward_reads, reverse_reads, threads, output_directory, stranded_type):
+    if stranded_type:
+        stranded_type_arg = f'--ss-{stranded_type} '
+    else:
+        stranded_type_arg = ''
     commandline = (
         'rnaspades.py '
         f'-1 {forward_reads} -2 {reverse_reads} '
         f'-t {threads} '
-        f'--ss-{stranded_type} '
+        f'{stranded_type_arg} '
         f'-o {output_directory} '
     )
     return subprocess.call(commandline, shell=True)

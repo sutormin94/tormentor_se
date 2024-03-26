@@ -18,6 +18,12 @@ an environment named `tormentor` will be created.
 (base) $ conda activate tormentor
 ```
 
+## Pipeline
+
+![](assets/workflow.png)
+
+The pipeline was implements using the Python programming language version 3.8. Raw RNA-Seq reads as processed and trimmed using FASTP and assembled using rnaSPAdes, followed by an identification of viroid-like elements using VNOM. Circular elements with length between 900 and 2000 are keep and analyzed using Prodigal for ORF annotation and adjust of the sequence phase based on the start position of the largest ORF. Obelisks-related ribozyme motifs are annotated using cmscan from the INFERNAL package using the covariance models created by the original team, and secondary structures and predicted using RNAFold. Only sequences containing ORFs and an secondary structure composed by at least 90% of self-pairing regions are considered potential obelisks. 
+
 ## Running
 
 ```bash
@@ -26,7 +32,7 @@ an environment named `tormentor` will be created.
 
 ## Results
 
-Results are provided in FASTA (nucleotide and protein), GenBank and CSV format, along with
+Results are provided in FASTA (nucleotide and protein) and GenBank format, along with
 intermediate results from each program used in the pipeline.
 
 ## The name

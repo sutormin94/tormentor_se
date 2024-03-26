@@ -89,7 +89,7 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 	## sort the resulting circles (if present) and running circUCLUST as a system command
 	
 	## circUCLUST variables
-	circU_path = global_dir+'/dependencies/circuclust'
+	circU_path = 'circuclust'
 	##circU_ID = 0.7
 	circU_command = circU_path + ' -cluster ' + input_prefix_string+'_cir.fasta -id ' + str(circU_ID) + ' -fastaout ' + input_prefix_string+'_cir_UC.fa 	-tsvout ' + input_prefix_string+'_cir_UC.tsv'
 	
@@ -347,7 +347,7 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 	CleanUp(input_prefix_string+'_cat.fasta', 0, 0, CU_direction, input_prefix_string+'_cat.fasta', CU_debug)
 	
 	## USEARCH variables
-	US_path = global_dir+'/dependencies/usearch'
+	US_path = 'usearch'
 	US_index_command = US_path + ' -makeudb_usearch ' + input_prefix_string+'_cat.fasta -output ' + input_prefix_string+'_cat.udb'
 	
 	print("-----=====-----")
@@ -725,7 +725,7 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 				print("running MARS on " + CC_dir_name)
 				print("-----=====-----")
 				os.chdir(CCCpair_path)
-				MARS_command = global_dir+'/dependencies/MARS/mars -a DNA -i ' + CC_dir_name + '.fasta -o ' + CC_dir_name + '_CP.fasta -m 1 -T 24'
+				MARS_command = 'mars -a DNA -i ' + CC_dir_name + '.fasta -o ' + CC_dir_name + '_CP.fasta -m 1 -T 24'
 				os.system(MARS_command)
 
 				## MARS will fail on highly degenerate circles (-P too high error)

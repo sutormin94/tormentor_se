@@ -11,6 +11,8 @@ dependencies:
   - spades
   - pyyaml=3.12
   - prodigal
+  - fastp
   - pip
+  - infernal
   - pip:
     - -e .
