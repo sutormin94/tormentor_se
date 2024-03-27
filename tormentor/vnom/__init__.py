@@ -1,8 +1,9 @@
 from Bio import SeqIO
 import subprocess
+import sys
 import os
 
-def run_vnom(fasta_preffix, max_length=2000):
+def run_vnom(fasta_preffix, max_length=2000, stdout=sys.stdout, stderr=sys.stderr):
     if os.path.isdir("0_non_singleton_clusters"):
         os.system('rm -r 0_non_singleton_clusters')
     command = (
@@ -14,7 +15,7 @@ def run_vnom(fasta_preffix, max_length=2000):
         '-CF_tandem 1 '
         '-USG_vs_all 1 '
     )
-    return subprocess.call(command, shell=True)
+    return subprocess.call(command, shell=True, stdout=stdout, stderr=stderr)
 
 def split_vnom_candidates(fasta_file, output_directory, min_length, max_length):
     files = []

@@ -3,12 +3,13 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation
 from BCBio import GFF
 import subprocess
 import glob
+import sys
 import os
 import re
 
-def run_prodigal(fasta_file, output_file):
+def run_prodigal(fasta_file, output_file, stdout=sys.stdout, stderr=sys.stderr):
 
-    return subprocess.call(f'prodigal -i {fasta_file} -p meta -o {output_file} -f gff', shell=True)
+    return subprocess.call(f'prodigal -i {fasta_file} -p meta -o {output_file} -f gff', shell=True, stdout=stdout, stderr=stderr)
 
 def correct_contig(record, output_file):
 
@@ -38,12 +39,12 @@ def correct_contig(record, output_file):
     SeqIO.write([record], output_file, 'genbank')
     return record
     
-def run_cmscan(fasta_file, output_directory, cm_directory, threshold=1e-6):
+def run_cmscan(fasta_file, output_directory, cm_directory, threshold=1e-6, stdout=sys.stdout, stderr=sys.stderr):
     sites = []
     for cm_file in glob.glob(f'{cm_directory}/*.cm'):
         cm_family = os.path.splitext(os.path.basename(cm_file))[0]
-        subprocess.call(f'cmpress -F {cm_file}', shell=True)
-        subprocess.call(f'cmscan --tblout {output_directory}/{cm_family}.txt {cm_file} {fasta_file}', shell=True)
+        subprocess.call(f'cmpress -F {cm_file}', shell=True, stdout=stdout, stderr=stderr)
+        subprocess.call(f'cmscan --tblout {output_directory}/{cm_family}.txt {cm_file} {fasta_file}', shell=True, stdout=stdout, stderr=stderr)
         for line in open(f'{output_directory}/{cm_family}.txt'):
             if line.startswith('#'):
                 continue
@@ -55,7 +56,7 @@ def run_cmscan(fasta_file, output_directory, cm_directory, threshold=1e-6):
             site['strand'] = int(line[107] + '1')
             if site['evalue'] < threshold:
                 sites.append(site)
-        return sites
+    return sites
     
 def add_rfam_sites_to_record(record, sites):
     for s, site in enumerate(sites):

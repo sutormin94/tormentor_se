@@ -29,7 +29,12 @@ The pipeline was implements using the Python programming language version 3.8. R
 ## Running
 
 ```bash
-(tormentor) $ tormentor --reads reads_1.fastq reads_2.fastq --output results/ --threads 4 --cm-directory data/cms/
+(tormentor) $ tormentor \
+    --reads reads_1.fastq reads_2.fastq \
+    --output results/ \
+    --threads 4 \
+    --cm-directory data/cms/ \
+    --minimum-self-pairing-percent 0.6
 ```
 
 ## Results

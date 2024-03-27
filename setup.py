@@ -16,6 +16,7 @@ setup(
     install_requires = [
         'pandas',
         'biopython',
-        'bcbio-gff'
+        'bcbio-gff',
+        'svglib'
     ]
 )

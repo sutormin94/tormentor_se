@@ -1,7 +1,8 @@
 from Bio import SeqIO
 import subprocess
+import sys
 
-def run_spades(forward_reads, reverse_reads, threads, output_directory, stranded_type):
+def run_spades(forward_reads, reverse_reads, threads, output_directory, stranded_type, stdout=sys.stdout, stderr=sys.stderr):
     if stranded_type:
         stranded_type_arg = f'--ss-{stranded_type} '
     else:
@@ -13,7 +14,7 @@ def run_spades(forward_reads, reverse_reads, threads, output_directory, stranded
         f'{stranded_type_arg} '
         f'-o {output_directory} '
     )
-    return subprocess.call(commandline, shell=True)
+    return subprocess.call(commandline, shell=True, stdout=stdout, stderr=stderr)
 
 def filter_and_rename_spades_transcripts(input_fasta, output_fasta):
 
