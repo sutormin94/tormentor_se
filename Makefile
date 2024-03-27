@@ -5,7 +5,13 @@ setup:
 	@bash scripts/post_configure_conda_env.sh
 
 download_test_data:
-	@cd tests & fasterq-dump  
+	@bash scripts/download_test_data.sh
 
-test:
-	@tormentor --reads tests/reads_1.fastq tests/reads_2.fastq -o tests/results/ --data-directory data/
+run_test:
+	@bash scripts/run_test.sh
+
+download_paper_data:
+	@bash scripts/download_paper_data.sh
+
+run_paper_analysis:
+	@bash scripts/run_paper_analysis.sh
