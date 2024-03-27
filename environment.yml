@@ -14,5 +14,6 @@ dependencies:
   - fastp
   - pip
   - infernal
+  - blast
   - pip:
     - -e .

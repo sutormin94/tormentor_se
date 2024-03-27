@@ -1,5 +1,6 @@
 from Bio import SeqIO
 from Bio.SeqFeature import SeqFeature, FeatureLocation
+from Bio.Blast import NCBIXML
 from BCBio import GFF
 import subprocess
 import glob
@@ -38,8 +39,30 @@ def correct_contig(record, output_file):
         record.annotations['molecule_type'] = 'DNA'
     SeqIO.write([record], output_file, 'genbank')
     return record
+
+def identify_cds(record, protein_database, output_directory, min_identity=0.8, evalue_treshold=1e-10):
+    for f, feature in enumerate(record.features):
+        blast_output_file = os.path.join(output_directory, f'cds_{f}.xml')
+        feature_sequence  = str(feature.location.extract(record.seq))
+        feature_sequence_file = f'{output_directory}/{f}_query.fa'
+        with open(feature_sequence_file, 'w') as writer:
+            writer.write(f'>{f}\n{feature_sequence}\n')
+        subprocess.call(
+            f'blastx -query {feature_sequence_file} -db {protein_database} -outfmt 5 -out {blast_output_file}',
+            shell=True
+        )
+        for blast_record in NCBIXML.parse(open(blast_output_file)):
+            for alignment in blast_record.alignments:
+                identity = alignment.hsps[0].identities / alignment.hsps[0].align_length
+                evalue = alignment.hsps[0].expect
+                if identity >= min_identity and evalue < evalue_treshold:
+                    feature.qualifiers['product'] = alignment.hit_def
+                    break
+            else:
+                feature.qualifiers['product'] = 'hypothetical protein'
+    return record
     
-def run_cmscan(fasta_file, output_directory, cm_directory, threshold=1e-6, stdout=sys.stdout, stderr=sys.stderr):
+def run_cmscan(fasta_file, output_directory, cm_directory, evalue_threshold=1e-6, stdout=sys.stdout, stderr=sys.stderr):
     sites = []
     for cm_file in glob.glob(f'{cm_directory}/*.cm'):
         cm_family = os.path.splitext(os.path.basename(cm_file))[0]
@@ -54,7 +77,7 @@ def run_cmscan(fasta_file, output_directory, cm_directory, threshold=1e-6, stdou
             site['start']  = int(line[85:93].strip(' '))
             site['end']    = int(line[94:102].strip(' '))
             site['strand'] = int(line[107] + '1')
-            if site['evalue'] < threshold:
+            if site['evalue'] < evalue_threshold:
                 sites.append(site)
     return sites
     

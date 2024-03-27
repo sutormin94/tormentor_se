@@ -1,7 +1,7 @@
 from tormentor.quality_control import run_fastp
 from tormentor.assembly import run_spades, filter_and_rename_spades_transcripts
 from tormentor.vnom import run_vnom, split_vnom_candidates
-from tormentor.annotation import run_prodigal, correct_contig, run_cmscan, add_rfam_sites_to_record
+from tormentor.annotation import run_prodigal, identify_cds, correct_contig, run_cmscan, add_rfam_sites_to_record
 from tormentor.secondary_structure import run_rnafold, run_rnaplot, compute_self_pairing_percent
 from tormentor.logo import logo
 from argparse import ArgumentParser
@@ -20,10 +20,12 @@ def main():
     argument_parser.add_argument('-s', '--minimum-self-pairing-percent', help='minimum percent in secondary structure', default=0.5, type=float)
     argument_parser.add_argument('--threads', help='number of CPU threads to use', default=4)
     argument_parser.add_argument('--min-qual', help='minimal quality of reads in Phred score', default=30)
+    argument_parser.add_argument('--min-identity', help='minimal indetity for oblin identification using BLAST', default=0.7)
+    argument_parser.add_argument('--evalue', help='e-value threshold used by BLAST and cmscan', default=1e-6)
     argument_parser.add_argument('--stranded-type', choices=['fr', 'rf'], default=None, help='stranded library layout (for rnaSPAdes)')
     argument_parser.add_argument('--min-len', default=900, type=int, help='min length for predicted obelisks')
     argument_parser.add_argument('--max-len', default=2000, type=int, help='max length for predicted obelisks')
-    argument_parser.add_argument('--cm-directory', help='rfam directory containing the alpha_body.cm and alpha_tip.com files', required=True)
+    argument_parser.add_argument('--data-directory', help='directory containing the dataset files', required=True)
     arguments = argument_parser.parse_args()
 
     fastp_directory               = os.path.join(arguments.output, 'step_1')
@@ -49,7 +51,7 @@ def main():
     vnom_output  = os.path.join(vnom_directory, 'transcripts_cir.fasta')
     
     # step_1 quality control
-    '''
+    
     print('Step 1: Running quality control ...')
     
     os.system(f'mkdir -p {fastp_directory}')
@@ -89,7 +91,7 @@ def main():
     
     filter_and_rename_spades_transcripts(spades_transcripts, spades_transcripts_clear)
     os.system(f'cp {spades_transcripts_clear} {vnom_input}.fasta')
-    '''
+    
     # step_3: run viroid circRNA detection
 
     print('Step 3: Running viroid-like circRNA prediction ...')
@@ -140,9 +142,18 @@ def main():
         if record is None:
             continue
 
-        sites = run_cmscan(obelisk_candidate_corrected_fasta, prodigal_directory, arguments.cm_directory,  stdout=step_4_log_handler, stderr=step_4_log_handler)
+        record = identify_cds(record, arguments.data_directory + '/proteins/oblins', prodigal_directory, evalue_treshold=arguments.evalue, min_identity=arguments.min_identity)
+
+        oblin_count = 0
+
+        for feature in record.features:
+            if feature.type == 'CDS' and 'oblin' in feature.qualifiers.get('product',''):
+                oblin_count += 1
+        sites = run_cmscan(obelisk_candidate_corrected_fasta, prodigal_directory, arguments.data_directory + '/cms',  stdout=step_4_log_handler, stderr=step_4_log_handler, evalue_threshold=arguments.evalue)
         
         record = add_rfam_sites_to_record(record, sites)
+
+        record.features = sorted(record.features, key=lambda x: int(x.location.start))
 
         SeqIO.write([record], obelisk_candidate_corrected_fasta, 'fasta')
         SeqIO.write([record], obelisk_candidate_corrected_genbank, 'genbank')
@@ -153,13 +164,16 @@ def main():
         run_rnaplot(obelisk_candidate_corrected_rnafold, stdout=step_4_log_handler, stderr=step_4_log_handler)
 
         self_pairing_percent = compute_self_pairing_percent(obelisk_candidate_corrected_rnafold)
-        if self_pairing_percent >= arguments.minimum_self_pairing_percent:
+        if self_pairing_percent >= arguments.minimum_self_pairing_percent and oblin_count > 0:
             os.system(f'cp {obelisk_candidate_corrected_fasta} {arguments.output}/obelisk_{obelisk_id+1}.fasta')
             os.system(f'cp {obelisk_candidate_corrected_fasta}.txt {arguments.output}/obelisk_{obelisk_id+1}.ss.txt')
             os.system(f'cp {obelisk_candidate_corrected_fasta}.txt.pdf {arguments.output}/obelisk_{obelisk_id+1}.ss.pdf')
             os.system(f'cp {obelisk_candidate_corrected_fasta}.txt.svg {arguments.output}/obelisk_{obelisk_id+1}.ss.svg')
             os.system(f'cp {obelisk_candidate_corrected_genbank} {arguments.output}/obelisk_{obelisk_id+1}.gbk')
             final_obelisk_count += 1
+            print('obelisk: ', obelisk_id+1)
+            print(' - self-pairing percent : ', self_pairing_percent)
+            print(' - number of oblin genes: ', oblin_count)
     step_4_log_handler.close()
     print(f'Finished! {final_obelisk_count} obelisks identified!')
     
