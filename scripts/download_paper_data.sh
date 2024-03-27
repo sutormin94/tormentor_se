@@ -1,5 +1,6 @@
 #!/usr/bin/bash 
 
+mkdir -p paper/data/
 cd paper/data/
 mkdir -p raw
 
