@@ -15,5 +15,6 @@ dependencies:
   - pip
   - infernal
   - blast
+  - sra-tools
   - pip:
     - -e .

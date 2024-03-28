@@ -10,4 +10,5 @@ while read acc; do
     --threads 4 \
     --data-directory data/ \
     --minimum-self-pairing-percent 0.5
+
 done < paper/data/accessions.txt

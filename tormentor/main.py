@@ -7,8 +7,10 @@ from tormentor.logo import logo
 from argparse import ArgumentParser
 from Bio import SeqIO
 from BCBio import GFF
-
+import multiprocessing
 import os
+
+CPU_COUNT = multiprocessing.cpu_count()
 
 def main():
 
@@ -18,7 +20,7 @@ def main():
     argument_parser.add_argument('--reads', nargs=2, metavar='<FASTQ file>', help='forward and reverse FASTQ files from stranded RNA-Seq')
     argument_parser.add_argument('-o', '--output', help='output directory')
     argument_parser.add_argument('-s', '--minimum-self-pairing-percent', help='minimum percent in secondary structure', default=0.5, type=float)
-    argument_parser.add_argument('--threads', help='number of CPU threads to use', default=4)
+    argument_parser.add_argument('--threads', help='number of CPU threads to use', default=CPU_COUNT)
     argument_parser.add_argument('--min-qual', help='minimal quality of reads in Phred score', default=30)
     argument_parser.add_argument('--min-identity', help='minimal indetity for oblin identification using BLAST', default=0.7)
     argument_parser.add_argument('--evalue', help='e-value threshold used by BLAST and cmscan', default=1e-6)
@@ -51,7 +53,7 @@ def main():
     vnom_output  = os.path.join(vnom_directory, 'transcripts_cir.fasta')
     
     # step_1 quality control
-    
+    '''
     print('Step 1: Running quality control ...')
     
     os.system(f'mkdir -p {fastp_directory}')
@@ -72,7 +74,7 @@ def main():
     # step_2: run assembly
 
     print('Step 2: Running de novo meta-transcriptome assembly ...')
-
+    
     os.system(f'mkdir -p {spades_directory}')
     step_2_return_code = run_spades(
         reads_1_trim, 
@@ -90,14 +92,16 @@ def main():
         exit(1)
     
     filter_and_rename_spades_transcripts(spades_transcripts, spades_transcripts_clear)
-    os.system(f'cp {spades_transcripts_clear} {vnom_input}.fasta')
-    
+
+    '''
     # step_3: run viroid circRNA detection
 
     print('Step 3: Running viroid-like circRNA prediction ...')
 
     os.system(f'mkdir -p {vnom_directory}')
     os.system(f'mkdir -p {vnom_directory_candidates}')
+    os.system(f'cp {spades_transcripts_clear} {vnom_input}.fasta')
+    
     step_3_return_code = run_vnom(vnom_input, max_length=arguments.max_len, stdout=step_3_log_handler, stderr=step_3_log_handler)
     step_3_log_handler.close()
     if step_3_return_code != 0:
