@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 
-mkdir -p tests
 cd tests
-prefetch SRR5949245
-fastq-dump SRR5949245 --split-3
+fasterq-dump SRR5949245
 mv SRR5949245_1.fastq reads_1.fastq
 mv SRR5949245_2.fastq reads_2.fastq
-rm SRR5949245*
+rm SRR5949245.fastq
