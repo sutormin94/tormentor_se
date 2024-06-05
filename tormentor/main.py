@@ -53,7 +53,7 @@ def main():
     vnom_output  = os.path.join(vnom_directory, 'transcripts_cir.fasta')
     
     # step_1 quality control
-    '''
+    
     print('Step 1: Running quality control ...')
     
     os.system(f'mkdir -p {fastp_directory}')
@@ -93,7 +93,7 @@ def main():
     
     filter_and_rename_spades_transcripts(spades_transcripts, spades_transcripts_clear)
 
-    '''
+    
     # step_3: run viroid circRNA detection
 
     print('Step 3: Running viroid-like circRNA prediction ...')
