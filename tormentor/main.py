@@ -17,7 +17,7 @@ def main():
     print(logo)
 
     argument_parser = ArgumentParser(description="An obelisk prediction and annotation pipeline from stranded RNA-Seq data")
-    argument_parser.add_argument('--reads', nargs=2, metavar='<FASTQ file>', help='forward and reverse FASTQ files from stranded RNA-Seq')
+    argument_parser.add_argument('--reads', nargs='+', metavar='<FASTQ file>', help='forward (and reverse) FASTQ file(s) from stranded RNA-Seq')
     argument_parser.add_argument('-o', '--output', help='output directory')
     argument_parser.add_argument('-s', '--minimum-self-pairing-percent', help='minimum percent in secondary structure', default=0.5, type=float)
     argument_parser.add_argument('--threads', help='number of CPU threads to use', default=CPU_COUNT)
@@ -44,11 +44,21 @@ def main():
     step_2_log_handler = open(f'{arguments.output}/logs/step_2.log', 'w')
     step_3_log_handler = open(f'{arguments.output}/logs/step_3.log', 'w')
     step_4_log_handler = open(f'{arguments.output}/logs/step_4.log', 'w')
-
-    reads_1_raw  = arguments.reads[0]
-    reads_2_raw  = arguments.reads[1]
-    reads_1_trim = os.path.join(fastp_directory, 'reads_1.fastq')
-    reads_2_trim = os.path.join(fastp_directory, 'reads_2.fastq')
+    
+    if len(reads)==2:
+        reads_1_raw  = arguments.reads[0]
+        reads_2_raw  = arguments.reads[1]
+        reads_1_trim = os.path.join(fastp_directory, 'reads_1.fastq')
+        reads_2_trim = os.path.join(fastp_directory, 'reads_2.fastq')
+        input_reads=[reads_1_raw, reads_2_raw]
+        trimmed_reads=[reads_1_trim, reads_2_trim]
+        
+    elif len(reads)==1:
+        reads_1_raw  = arguments.reads[0]
+        reads_1_trim = os.path.join(fastp_directory, 'reads_1.fastq')
+        input_reads=[reads_1_raw]
+        trimmed_reads=[reads_1_trim]
+        
     vnom_input   = os.path.join(vnom_directory, 'transcripts')
     vnom_output  = os.path.join(vnom_directory, 'transcripts_cir.fasta')
     
@@ -58,10 +68,8 @@ def main():
     
     os.system(f'mkdir -p {fastp_directory}')
     step_1_return_code = run_fastp(
-        reads_1_raw, 
-        reads_2_raw, 
-        reads_1_trim, 
-        reads_2_trim, 
+        input_reads, 
+        trimmed_reads, 
         min_quality=arguments.min_qual,
         stdout=step_1_log_handler,
         stderr=step_1_log_handler
@@ -77,8 +85,7 @@ def main():
     
     os.system(f'mkdir -p {spades_directory}')
     step_2_return_code = run_spades(
-        reads_1_trim, 
-        reads_2_trim, 
+        trimmed_reads, 
         arguments.threads, 
         spades_directory, 
         stranded_type=arguments.stranded_type,
