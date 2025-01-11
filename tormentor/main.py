@@ -45,7 +45,7 @@ def main():
     step_3_log_handler = open(f'{arguments.output}/logs/step_3.log', 'w')
     step_4_log_handler = open(f'{arguments.output}/logs/step_4.log', 'w')
     
-    if len(reads)==2:
+    if len(arguments.reads)==2:
         reads_1_raw  = arguments.reads[0]
         reads_2_raw  = arguments.reads[1]
         reads_1_trim = os.path.join(fastp_directory, 'reads_1.fastq')
@@ -53,7 +53,7 @@ def main():
         input_reads=[reads_1_raw, reads_2_raw]
         trimmed_reads=[reads_1_trim, reads_2_trim]
         
-    elif len(reads)==1:
+    elif len(arguments.reads)==1:
         reads_1_raw  = arguments.reads[0]
         reads_1_trim = os.path.join(fastp_directory, 'reads_1.fastq')
         input_reads=[reads_1_raw]
