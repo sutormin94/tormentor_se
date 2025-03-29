@@ -36,7 +36,7 @@ def correct_contig(record, output_file):
             new_features.append(new_feature)
         record.features = new_features
         record.seq = record.seq[offset:] + record.seq[:offset]
-        record.annotations['molecule_type'] = 'DNA'
+    record.annotations['molecule_type'] = 'DNA'
     SeqIO.write([record], output_file, 'genbank')
     return record
 
@@ -47,19 +47,26 @@ def identify_cds(record, protein_database, output_directory, min_identity=0.8, e
         feature_sequence_file = f'{output_directory}/{f}_query.fa'
         with open(feature_sequence_file, 'w') as writer:
             writer.write(f'>{f}\n{feature_sequence}\n')
-        subprocess.call(
-            f'blastx -query {feature_sequence_file} -db {protein_database} -outfmt 5 -out {blast_output_file}',
-            shell=True
-        )
-        for blast_record in NCBIXML.parse(open(blast_output_file)):
-            for alignment in blast_record.alignments:
-                identity = alignment.hsps[0].identities / alignment.hsps[0].align_length
-                evalue = alignment.hsps[0].expect
-                if identity >= min_identity and evalue < evalue_treshold:
-                    feature.qualifiers['product'] = alignment.hit_def
-                    break
-            else:
-                feature.qualifiers['product'] = 'hypothetical protein'
+        
+        if len(feature_sequence)>0:
+            
+            print(f'Running blastx for {feature_sequence_file}')
+            
+            subprocess.run(
+                f'blastx -query {feature_sequence_file} -db {protein_database} -outfmt 5 -out {blast_output_file}',
+                shell=True
+            )
+            
+            for blast_record in NCBIXML.parse(open(blast_output_file)):
+                for alignment in blast_record.alignments:
+                    identity = alignment.hsps[0].identities / alignment.hsps[0].align_length
+                    evalue = alignment.hsps[0].expect
+                    if identity >= min_identity and evalue < evalue_treshold:
+                        feature.qualifiers['product'] = alignment.hit_def
+                        break
+                else:
+                    feature.qualifiers['product'] = 'hypothetical protein'
+                
     return record
     
 def run_cmscan(fasta_file, output_directory, cm_directory, evalue_threshold=1e-6, stdout=sys.stdout, stderr=sys.stderr):

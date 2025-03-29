@@ -22,20 +22,26 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 	
 	## input string
 	##input_prefix_string = 'SRR11060619_sub'
+	print(input_prefix_string)
 	
 	## starting directory
-	starting_dir = os.getcwd()
+	input_prefix_list=input_prefix_string.split('/')
+	starting_dir=''
+	for pref_ele in input_prefix_list[:-1]:
+		starting_dir+=f'{pref_ele}/'
+	
+	#starting_dir = os.getcwd()
 	
 	##================================================================================================================================================
 	## check that the input_prefix_string contains exactly one '_'
 
-	char_count = Counter(input_prefix_string)
-	underscore_count = char_count['_']
-	if (underscore_count != 1):
-		print("-----=====-----")
-		print("the input prefix string needs to have exactly one underscore within it (not on the edges)")
-		print("quitting")
-		quit()
+	#char_count = Counter(input_prefix_string)
+	#underscore_count = char_count['_']
+	#if (underscore_count != 1):
+	#	print("-----=====-----")
+	#	print("the input prefix string needs to have exactly one underscore within it (not on the edges)")
+	#	print("quitting")
+	#	quit()
 	##
 
 	##================================================================================================================================================
@@ -76,7 +82,7 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 	
 	CircleFinder(input_prefix_string+'_filt.fasta', CF_k_len, CF_simple, CF_tandem, CF_tandem_thr, CF_min_len, CF_keep_linears, input_prefix_string, 	input_prefix_string+'_cir.fasta', input_prefix_string+'_lin.fasta', CF_debug, CF_verb_debug)
 	
-	circles_found = exists(starting_dir + '/' + input_prefix_string+'_cir.fasta')
+	circles_found = exists(input_prefix_string+'_cir.fasta')
 	
 	if not circles_found:
 		print("-----=====-----")
@@ -199,7 +205,8 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 	
 	CF_circles_fasta_list = opener(input_prefix_string+'_cir.fasta')
 	
-	os.mkdir('0_non_singleton_clusters')
+	os.mkdir(os.path.join(starting_dir, '0_non_singleton_clusters'))
+	#print(f'{os.getcwd()}')
 
 	## for each centroid, write a new directory under a new "0_non_singleton_clusters" directory in which the seqIDs will moved and extact the sequences
 	
@@ -225,9 +232,10 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 		## create a directory for each cluster in '0_non_singleton_clusters'
 
 		cluster_count_str = str(counter).zfill(digit_count)
-		cluster_ID = input_prefix_string + '_CU_clust_' + cluster_count_str
-		os.chdir(starting_dir+'/0_non_singleton_clusters/')
-		os.mkdir(cluster_ID)
+		cluster_ID = 'CU_clust_' + cluster_count_str
+		os.chdir(os.path.join(starting_dir, '0_non_singleton_clusters'))
+		#print(f'{os.getcwd()}')
+		os.mkdir(os.path.join(starting_dir, '0_non_singleton_clusters', cluster_ID))
 
 		## write the seqID list to all_init_clusts_names_list
 
@@ -235,7 +243,8 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 
 		## write the cluster's seqIDs and sequences (as .fasta) to this directory
 
-		os.chdir(starting_dir+'/0_non_singleton_clusters/'+cluster_ID+'/')
+		os.chdir(os.path.join(starting_dir, '0_non_singleton_clusters', cluster_ID))
+		#print(f'{os.getcwd()}')
 		saver(cluster_ID+'.seqID',members_seqID_list)
 		cluster_fasta_list = SequenceExtractor(CF_circles_fasta_list, members_seqID_list)
 		saver(cluster_ID+'.fasta',cluster_fasta_list)
@@ -246,7 +255,8 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 	
 	CF_circles_fasta_list = []
 	
-	os.chdir(starting_dir+'/0_non_singleton_clusters/')
+	os.chdir(os.path.join(starting_dir, '0_non_singleton_clusters'))
+	#print(f'{os.getcwd()}')
 	saver('non_singleton_clusters_names.list',all_init_clusts_names_list)
 	
 	##================================================================================================================================================
@@ -268,7 +278,8 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 	for init_cluster_ID in all_init_clusts_names_list:
 		SAS_input_fasta = init_cluster_ID + '.fasta'
 		SAS_output_string = init_cluster_ID
-		os.chdir(starting_dir+'/0_non_singleton_clusters/'+init_cluster_ID+'/')
+		os.chdir(os.path.join(starting_dir, '0_non_singleton_clusters', init_cluster_ID))
+		print(f'{os.getcwd()}')
 		print("-----=====-----")
 		SASFinder(SAS_input_fasta, SAS_k_len, SAS_output_string, SAS_rename, SAS_centroid, SAS_debug)
 
@@ -279,7 +290,7 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 			SAS_cluster_list.append(init_cluster_ID)
 	##
 	
-	os.chdir(starting_dir+'/0_non_singleton_clusters/')
+	os.chdir(os.path.join(starting_dir, '0_non_singleton_clusters'))
 	
 	## quit if no SAS clusters were found
 	
@@ -304,10 +315,10 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 	cluster_rename_log_1 = []
 	renamed_SAS_cluster_list = []
 	for SAS_cluster in SAS_cluster_list:
-		os.chdir(starting_dir+'/1_SAS_clusters/')
+		os.chdir(os.path.join(starting_dir, '1_SAS_clusters'))
 		SAS_cluster_count_str = str(counter).zfill(digit_count)
 		counter += 1
-		new_SAS_cluster_ID = input_prefix_string + '_SAS_clust_' + SAS_cluster_count_str
+		new_SAS_cluster_ID = 'SAS_clust_' + SAS_cluster_count_str
 		os.mkdir(new_SAS_cluster_ID)
 		source_path = starting_dir+'/0_non_singleton_clusters/'+SAS_cluster+'/'+SAS_cluster
 		destin_path = starting_dir+'/1_SAS_clusters/'+new_SAS_cluster_ID+'/'+new_SAS_cluster_ID
@@ -337,23 +348,23 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 	
 	os.chdir(starting_dir)
 	
-	cat_command = 'cat ' + input_prefix_string+'_cir.fasta ' + input_prefix_string+'_lin.fasta > ' + input_prefix_string+'_cat.fasta'
+	cat_command = 'cat ' + 'transcripts_cand_cir.fasta ' + 'transcripts_cand_lin.fasta > ' + 'transcripts_cand_cat.fasta'
 	
 	os.system(cat_command)
 	
 	## CleanUp input variables
 	## input fasta, max length, min length, sort length direction (d,n,a), output fasta, debug
 	
-	CleanUp(input_prefix_string+'_cat.fasta', 0, 0, CU_direction, input_prefix_string+'_cat.fasta', CU_debug)
+	CleanUp('transcripts_cand_cat.fasta', 0, 0, CU_direction, 'transcripts_cand_cat.fasta', CU_debug)
 	
 	## USEARCH variables
 	US_path = 'usearch'
-	US_index_command = US_path + ' -makeudb_usearch ' + input_prefix_string+'_cat.fasta -output ' + input_prefix_string+'_cat.udb'
+	US_index_command = US_path + ' -makeudb_usearch ' + 'transcripts_cand_cat.fasta -output ' + 'transcripts_cand_cat.udb'
 	
 	print("-----=====-----")
 	os.system(US_index_command)
 	
-	US_index_path = starting_dir + '/' + input_prefix_string+'_cat.udb'
+	US_index_path = os.path.join(starting_dir, 'transcripts_cand_cat.udb')
 	
 	##===============================================================================================================================================
 	## now run USEARCH for each SAS cluster
@@ -378,13 +389,13 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 		return in_seqID_list
 	##
 	
-	os.chdir(starting_dir+'/1_SAS_clusters/')
+	os.chdir(os.path.join(starting_dir, '1_SAS_clusters'))
 	
 	extended_seqIDs_list = []
 	extended_seqIDs_temp_list = []
 	SAS_centroid_seqIDs_list = []
 	for SAS_cluster in renamed_SAS_cluster_list:
-		os.chdir(starting_dir+'/1_SAS_clusters/'+SAS_cluster+'/')
+		os.chdir(os.path.join(starting_dir, '1_SAS_clusters', SAS_cluster))
 		US_large_tsv_out = SAS_cluster+'_USL.tsv'
 		US_small_tsv_out = SAS_cluster+'_USS.tsv'
 
@@ -453,18 +464,18 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 	destin_path = starting_dir+'/2_merged_clusters/US_ext_SAS_clusters.seqIDlist'
 	shutil.copyfile(source_path, destin_path)
 	
-	os.chdir(starting_dir+'/2_merged_clusters/')
+	os.chdir(os.path.join(starting_dir, '2_merged_clusters'))
 	
 	## Merger variables
-	M_out_prefix = input_prefix_string + '_merged_cluster'
+	M_out_prefix =  'merged_cluster'
 	
 	Merger('US_ext_SAS_clusters.seqIDlist', M_out_prefix)
 	
 	## find names of merged clusters
 	
 	merged_cluster_ID_list = []
-	for filename in os.listdir(starting_dir+'/2_merged_clusters/'):
-		fullpath = os.path.join(starting_dir+'/2_merged_clusters/', filename)
+	for filename in os.listdir(os.path.join(starting_dir, '2_merged_clusters')):
+		fullpath = os.path.join(starting_dir, '2_merged_clusters', filename)
 		if os.path.isfile(fullpath):
 			if filename.endswith('.seqIDs'):
 				merged_cluster_ID_list.append(filename[:-7])
@@ -475,7 +486,7 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 	## load the catted circular and linear contigs:
 	
 	os.chdir(starting_dir)
-	cat_contig_fasta_list = opener(input_prefix_string+'_cat.fasta')
+	cat_contig_fasta_list = opener('transcripts_cand_cat.fasta')
 	
 	## create a directory for each merged cluster, extract the consituent sequences, and run SASFinder
 	## and check if each merged cluster was indeed merged iff then choose the shorter centroid as the new centroid
@@ -499,7 +510,7 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 	SAS2_debug = 1
 	
 	for merged_cluster_ID in merged_cluster_ID_list:
-		os.chdir(starting_dir+'/2_merged_clusters/')
+		os.chdir(os.path.join(starting_dir, '2_merged_clusters'))
 		merged_cluster_seqID_list = opener(merged_cluster_ID+'.seqIDs')
 		multi_centroid_seqIDs_list = CentroidCounter(SAS_centroid_seqIDs_list, merged_cluster_seqID_list)
 
@@ -518,7 +529,7 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 			shortest_length = CU_max_len
 		##
 		for centroid in multi_centroid_seqIDs_list:
-			centroid_unit_length = int(centroid.split('_')[5])
+			centroid_unit_length = int(centroid.split('_')[8])
 			if (centroid_unit_length < shortest_length):
 				shortest_length = centroid_unit_length
 				shortest_centroid = centroid
@@ -527,9 +538,9 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 		merged_cluster_seqID_list.insert(0,shortest_centroid)
 		##
 
-		os.mkdir(starting_dir+'/2_merged_clusters/'+merged_cluster_ID)
-		os.chdir(starting_dir+'/2_merged_clusters/'+merged_cluster_ID)
-		shutil.move(starting_dir+'/2_merged_clusters/'+merged_cluster_ID+'.seqIDs', starting_dir+'/2_merged_clusters/'+merged_cluster_ID+'/'+	merged_cluster_ID+'.seqIDs')
+		os.mkdir(os.path.join(starting_dir, '2_merged_clusters', merged_cluster_ID))
+		os.chdir(os.path.join(starting_dir, '2_merged_clusters', merged_cluster_ID))
+		shutil.move(os.path.join(starting_dir, '2_merged_clusters', merged_cluster_ID+'.seqIDs'), os.path.join(starting_dir, '2_merged_clusters', merged_cluster_ID, merged_cluster_ID+'.seqIDs'))
 		merged_fasta_list = SequenceExtractor(cat_contig_fasta_list, merged_cluster_seqID_list)
 		saver(merged_cluster_ID+'.fasta',merged_fasta_list)
 		
@@ -541,7 +552,7 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 	##
 	
 	cat_contig_fasta_list = []
-	os.chdir(starting_dir+'/2_merged_clusters/')
+	os.chdir(os.path.join(starting_dir, '2_merged_clusters'))
 	saver('merged_cluster_IDs',merged_cluster_ID_list)
 	
 	##================================================================================================================================================
@@ -567,22 +578,22 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 	for merged_cluster_ID in merged_cluster_ID_list:
 		merged_cluster_count_str = str(counter).zfill(digit_count)
 		counter += 1
-		new_resolved_cluster_ID = input_prefix_string+'_resolved_cluster_'+merged_cluster_count_str
-		new_resolved_cluster_path = starting_dir+'/3_resolved_clusters/'+new_resolved_cluster_ID+'/'
+		new_resolved_cluster_ID = 'resolved_cluster_'+merged_cluster_count_str
+		new_resolved_cluster_path = os.path.join(starting_dir, '3_resolved_clusters', new_resolved_cluster_ID)
 		
 		os.mkdir(new_resolved_cluster_path)
 
 		## copy over and rename the all catted sequences
-		shutil.move(starting_dir+'/2_merged_clusters/'+merged_cluster_ID+'/'+merged_cluster_ID+'.fasta',new_resolved_cluster_path+new_resolved_cluster_ID+	'.fasta')
+		shutil.move(os.path.join(starting_dir, '2_merged_clusters', merged_cluster_ID, merged_cluster_ID+'.fasta'), os.path.join(new_resolved_cluster_path, new_resolved_cluster_ID+'.fasta'))
 
 		## copy over and rename the antisense sequences
-		shutil.move(starting_dir+'/2_merged_clusters/'+merged_cluster_ID+'/'+merged_cluster_ID+'_antisense.fasta',new_resolved_cluster_path+	new_resolved_cluster_ID+'_antisense.fasta')
+		shutil.move(os.path.join(starting_dir, '2_merged_clusters', merged_cluster_ID, merged_cluster_ID+'_antisense.fasta'), os.path.join(new_resolved_cluster_path, new_resolved_cluster_ID+'_antisense.fasta'))
 
 		## copy over and rename the sense sequences
-		shutil.move(starting_dir+'/2_merged_clusters/'+merged_cluster_ID+'/'+merged_cluster_ID+'_sense.fasta',new_resolved_cluster_path+	new_resolved_cluster_ID+'_sense.fasta')
+		shutil.move(os.path.join(starting_dir, '2_merged_clusters', merged_cluster_ID, merged_cluster_ID+'_sense.fasta'), os.path.join(new_resolved_cluster_path, new_resolved_cluster_ID+'_sense.fasta'))
 
 		## copy over and rename the centroid sequence
-		shutil.move(starting_dir+'/2_merged_clusters/'+merged_cluster_ID+'/'+merged_cluster_ID+'_centroid.fasta',new_resolved_cluster_path+	new_resolved_cluster_ID+'_centroid.fasta')
+		shutil.move(os.path.join(starting_dir, '2_merged_clusters', merged_cluster_ID, merged_cluster_ID+'_centroid.fasta'), os.path.join(new_resolved_cluster_path, new_resolved_cluster_ID+'_centroid.fasta'))
 
 		## keep renaming log
 
@@ -591,7 +602,7 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 		resolved_ID_cluster_list.append(new_resolved_cluster_ID)
 	##
 	
-	os.chdir(starting_dir+'/3_resolved_clusters/')
+	os.chdir(os.path.join(starting_dir, '3_resolved_clusters'))
 	saver('2_to_3_renaming_log', cluster_rename_log_2)
 	
 	## go through each cluster, and by comparing to the centroid, identify any concatemeric contigs (CCs):
@@ -637,8 +648,8 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 		centroid_fasta = opener(in_centroid_filename)
 
 		## determine the upper and lower limits for considering a sequence as 'unit-length'
-		centroid_upper_len_limit = (1+CC_len_thr) * int(centroid_fasta[0].split('_')[5])
-		centroid_lower_len_limit = (1-CC_len_thr) * int(centroid_fasta[0].split('_')[5])
+		centroid_upper_len_limit = (1+CC_len_thr) * int(centroid_fasta[0].split('_')[8])
+		centroid_lower_len_limit = (1-CC_len_thr) * int(centroid_fasta[0].split('_')[8])
 
 		## empty lists to load .fastas into
 		CC_seqIDs = []
@@ -664,7 +675,7 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 		## smaller than unit-length = fragment
 		for entry in cluster_fasta:
 			if entry.startswith('>'):
-				member_len = int(entry.split('_')[5])
+				member_len = int(entry.split('_')[8])
 				if (member_len > centroid_upper_len_limit):
 					CC_seqIDs.append(entry.split('>')[1]) ## this is needed bc SequenceExtractor uses seqIDs w/o '>'
 				elif (member_len < centroid_lower_len_limit):
@@ -778,7 +789,7 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 	##
 	
 	for resolved_cluster_ID in resolved_ID_cluster_list:
-		os.chdir(starting_dir+'/3_resolved_clusters/'+resolved_cluster_ID+'/')
+		os.chdir(os.path.join(starting_dir, '3_resolved_clusters', resolved_cluster_ID))
 		print("-----=====-----")
 		print("assessing the sense hits of " + resolved_cluster_ID + " for concatemeric and sub unit-length contigs")
 		CCFinder(resolved_cluster_ID+'_sense.fasta',resolved_cluster_ID+'_centroid.fasta',1)
@@ -796,13 +807,13 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 	
 	## create the final directory and sub-directories for sense and antisense sequences
 	
-	os.chdir(starting_dir+'/4_final_clusters/')
+	os.chdir(os.path.join(starting_dir, '4_final_clusters'))
 	final_cluster_ID_list = []
 	cluster_rename_log_3 = []
 	for resolved_cluster_ID in resolved_ID_cluster_list:
 
 		## extract the final cluster ID number from the previous directory names
-		final_cluster_name = input_prefix_string + "_cluster_" + resolved_cluster_ID.split('_')[-1]
+		final_cluster_name = "cluster_" + resolved_cluster_ID.split('_')[-1]
 
 		## make nested directories
 		os.mkdir(final_cluster_name)
@@ -817,7 +828,7 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 		cluster_rename_log_3.append(rename_log_entry)
 	##
 	
-	os.chdir(starting_dir+'/4_final_clusters/')
+	os.chdir(os.path.join(starting_dir, '4_final_clusters'))
 	saver('3_to_4_renaming_log', cluster_rename_log_3)
 	
 	## ok copy over the appropriate (ULs and fragments) .fasta files to the final directory
@@ -825,14 +836,14 @@ def main(input_prefix_string,CU_max_len,CU_min_len,CF_k_len,CF_simple,CF_tandem,
 	
 	def tofinalcopy(polarity):
 		## uses glob.glob to look for files matching a regex string
-		wc_filepath = starting_dir+'/3_resolved_clusters/'+resolved_cluster_ID+'/'+resolved_cluster_ID+'_'+polarity+'*'
+		wc_filepath = os.path.join(starting_dir, '3_resolved_clusters', resolved_cluster_ID, resolved_cluster_ID+'_'+polarity+'*')
 		for wc_fasta in glob.glob(wc_filepath):
-			destin_path = starting_dir+'/4_final_clusters/'+final_cluster_ID_list[resolved_cluster_ID_ind]+'/'+polarity+'/'
+			destin_path = os.path.join(starting_dir, '4_final_clusters', final_cluster_ID_list[resolved_cluster_ID_ind], polarity)
 			shutil.copy(wc_fasta, destin_path)
 	##
 	
 	for resolved_cluster_ID_ind, resolved_cluster_ID in enumerate(resolved_ID_cluster_list):
-		os.chdir(starting_dir+'/3_resolved_clusters/'+resolved_cluster_ID+'/')
+		os.chdir(os.path.join(starting_dir, '3_resolved_clusters', resolved_cluster_ID))
 		tofinalcopy('sense')
 		tofinalcopy('antisense')
 	##

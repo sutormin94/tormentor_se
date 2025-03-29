@@ -59,8 +59,8 @@ def main():
         input_reads=[reads_1_raw]
         trimmed_reads=[reads_1_trim]
         
-    vnom_input   = os.path.join(vnom_directory, 'transcripts')
-    vnom_output  = os.path.join(vnom_directory, 'transcripts_cir.fasta')
+    vnom_input   = os.path.join(vnom_directory, 'transcripts_cand')
+    vnom_output  = os.path.join(vnom_directory, 'transcripts_cand_cir.fasta')
     
     # step_1 quality control
     
@@ -75,7 +75,8 @@ def main():
         stderr=step_1_log_handler
     )
     step_1_log_handler.close()
-    if step_1_return_code != 0:
+
+    if step_1_return_code and (step_1_return_code != 0):
         print('Error while read quality control')
         exit(1)
 
@@ -94,7 +95,7 @@ def main():
     )
     step_2_log_handler.close()
     
-    if step_2_return_code != 0:
+    if step_2_return_code and (step_2_return_code != 0):
         print('Error while assembling RNA sequences')
         exit(1)
     
@@ -127,6 +128,7 @@ def main():
     final_obelisk_count = 0
 
     for obelisk_id, obelisk_candidate in enumerate(obelisks_candidates):
+        print(f'Now working with {obelisk_id} {obelisk_candidate}')
         if not os.path.isfile(obelisk_candidate):
             continue
         prodigal_output = os.path.join(prodigal_directory, os.path.basename(obelisk_candidate) + '.gff')
@@ -185,6 +187,7 @@ def main():
             print('obelisk: ', obelisk_id+1)
             print(' - self-pairing percent : ', self_pairing_percent)
             print(' - number of oblin genes: ', oblin_count)
+    
     step_4_log_handler.close()
     print(f'Finished! {final_obelisk_count} obelisks identified!')
     
